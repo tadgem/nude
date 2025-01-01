@@ -20,9 +20,10 @@ set(nude_INCLUDES
         ${SUBMODULE_DIR}/sdl/include
         ${SUBMODULE_DIR}/zep/include
         ${THIRD_PARTY_DIR}/imgui
+        ${THIRD_PARTY_DIR}/clip
 CACHE INTERNAL "")
 
 add_library(nude STATIC ${nude_SRC})
 
 target_include_directories(nude PUBLIC ${nude_INCLUDES})
-target_link_libraries(nude PRIVATE SDL3-static Zep)
+target_link_libraries(nude PRIVATE SDL3-static Zep clip)

@@ -13,6 +13,7 @@
 #include "zep/tab_window.h"
 #include "zep/theme.h"
 #include "zep/window.h"
+#include "clip.h"
 
 namespace nude
 {
@@ -44,8 +45,6 @@ namespace nude
   class ZepContainer : public Zep::IZepComponent, public Zep::IZepReplProvider
   {
   public:
-
-
     const std::string shader = R"R(
       #version 330 core
 
@@ -91,13 +90,11 @@ namespace nude
       cfg.OversampleH = 4;
       cfg.OversampleV = 4;
 
-      /// auto pImFont = ImGui::GetIO().Fonts->AddFontFromFileTTF(fontPath.c_str(), float(fontPixelHeight), &cfg, ranges.Data);
-
-//      display.SetFont(Zep::ZepTextType::UI, std::make_shared<Zep::ZepFont_ImGui>(display, pImFont, fontPixelHeight));
-//      display.SetFont(Zep::ZepTextType::Text, std::make_shared<Zep::ZepFont_ImGui>(display, pImFont, fontPixelHeight));
-//      display.SetFont(Zep::ZepTextType::Heading1, std::make_shared<Zep::ZepFont_ImGui>(display, pImFont, int(fontPixelHeight * 1.75)));
-//      display.SetFont(Zep::ZepTextType::Heading2, std::make_shared<Zep::ZepFont_ImGui>(display, pImFont, int(fontPixelHeight * 1.5)));
-//      display.SetFont(Zep::ZepTextType::Heading3, std::make_shared<Zep::ZepFont_ImGui>(display, pImFont, int(fontPixelHeight * 1.25)));
+      // display.SetFont(Zep::ZepTextType::UI, std::make_shared<Zep::ZepFont_ImGui>(display, pImFont, fontPixelHeight));
+      // display.SetFont(Zep::ZepTextType::Text, std::make_shared<Zep::ZepFont_ImGui>(display, pImFont, fontPixelHeight));
+      // display.SetFont(Zep::ZepTextType::Heading1, std::make_shared<Zep::ZepFont_ImGui>(display, pImFont, int(fontPixelHeight * 1.75)));
+      // display.SetFont(Zep::ZepTextType::Heading2, std::make_shared<Zep::ZepFont_ImGui>(display, pImFont, int(fontPixelHeight * 1.5)));
+      // display.SetFont(Zep::ZepTextType::Heading3, std::make_shared<Zep::ZepFont_ImGui>(display, pImFont, int(fontPixelHeight * 1.25)));
 
       unsigned int flags = 0; // ImGuiFreeType::NoHinting;
       // ImGuiFreeType::BuildFontAtlas(ImGui::GetIO().Fonts, flags);
@@ -225,17 +222,46 @@ namespace nude
       return false;
     }
 
+    std::string GetClipboardText()
+    {
+      // Try opening the clipboard
+      if (! OpenClipboard(nullptr))
+      {
+        return std::string();
+      }
+
+      // Get handle of clipboard object for ANSI text
+      HANDLE hData = GetClipboardData(CF_TEXT);
+      if (hData == nullptr) {
+        return std::string();
+      }
+
+      // Lock the handle to get the actual text pointer
+      char * pszText = static_cast<char*>( GlobalLock(hData) );
+      if (pszText == nullptr) {
+      }
+
+      std::string text( pszText );
+
+      // Release the lock
+      GlobalUnlock( hData );
+
+      // Release the clipboard
+      CloseClipboard();
+
+      return text;
+    }
     // Inherited via IZepComponent
     virtual void Notify(std::shared_ptr<Zep::ZepMessage> message) override
     {
       if (message->messageId == Zep::Msg::GetClipBoard)
       {
-        //clip::get_text(message->str);
+        clip::get_text(message->str);
         message->handled = true;
       }
       else if (message->messageId == Zep::Msg::SetClipBoard)
       {
-        // clip::set_text(message->str);
+        clip::set_text(message->str);
         message->handled = true;
       }
       else if (message->messageId == Zep::Msg::RequestQuit)
@@ -244,7 +270,7 @@ namespace nude
       }
       else if (message->messageId == Zep::Msg::ToolTip)
       {
-        auto spTipMsg = std::static_pointer_cast<Zep::ToolTipMessage>(message);
+         auto spTipMsg = std::static_pointer_cast<Zep::ToolTipMessage>(message);
         if (spTipMsg->location.Valid() && spTipMsg->pBuffer)
         {
           auto pSyntax = spTipMsg->pBuffer->GetSyntax();
@@ -278,6 +304,11 @@ namespace nude
       return *spEditor;
     }
 
+    virtual void HandleInput()
+    {
+      spEditor->HandleInput();
+    }
+
     bool quit = false;
     std::unique_ptr<Zep::ZepEditor_ImGui> spEditor;
 
@@ -302,6 +333,7 @@ namespace nude
       bool          m_quit = false;
     };
     static State  Init();
+    static void   SetImGuiStyle();
     static void   PreFrame(State& s);
     static void   PostFrame(State& s);
     static void   Quit(State& s);

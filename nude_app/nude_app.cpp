@@ -22,7 +22,8 @@ int main(int, char**)
     if(file_browser.HasSelected())
     {
       std::cout << "Selected filename" << file_browser.GetSelected().string() << std::endl;
-      s.m_zep_state->spEditor->InitWithFile(file_browser.GetSelected().string());
+      s.m_zep_state->spEditor->InitWithFileOrDir(file_browser.GetSelected().string());
+
       file_browser.ClearSelected();
     }
 
@@ -50,13 +51,9 @@ int main(int, char**)
 
       // Display the editor inside this window
       s.m_zep_state->spEditor->Display();
-      s.m_zep_state->spEditor->HandleInput();
 
       bool zep_focused = ImGui::IsWindowFocused();
-      if (zep_focused)
-      {
-        s.m_zep_state->spEditor->HandleInput();
-      }
+      s.m_zep_state->HandleInput();
 
       ImGui::End();
     }

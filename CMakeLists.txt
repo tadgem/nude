@@ -10,6 +10,7 @@ set(SDL_SHARED OFF CACHE INTERNAL "")
 set(SDL_STATIC TRUE CACHE INTERNAL TRUE)
 
 add_subdirectory(submodules/sdl)
+add_subdirectory(third-party/clip)
 add_subdirectory(submodules/zep)
 
 add_subdirectory(nude)
