@@ -1,8 +1,7 @@
 #pragma once
 #include <SDL3/SDL.h>
 #include "imgui.h"
-
-#include "../../submodules/zep/demos/demo_imgui/clip/clip.h"
+#include "imfilebrowser.h"
 #include "zep/filesystem.h"
 #include "zep/imgui/display_imgui.h"
 #include "zep/imgui/editor_imgui.h"
@@ -293,6 +292,11 @@ namespace nude
       SDL_Window*   m_window;
       SDL_Renderer* m_renderer;
       ZepContainer* m_zep_state;
+
+      ImFont*       m_ui_font;
+      ImFont*       m_source_code_font;
+
+      ImGuiID       m_global_dockspace_id;
 
       ImVec4        m_clear_color = ImVec4(0.1f, 0.1f, 0.14f, 1.00f);
       bool          m_quit = false;

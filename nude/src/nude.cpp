@@ -1,4 +1,5 @@
 #include "nude.h"
+#include "font.h"
 #include "backends/imgui_impl_sdl3.h"
 #include "backends/imgui_impl_sdlrenderer3.h"
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -7,9 +8,15 @@
 #include <SDL3/SDL_opengl.h>
 #endif
 #include <stdio.h>
+#ifdef _WIN32
+#include "windows.h"
+#endif
 
 nude::API::State nude::API::Init() {
 
+#ifdef WIN32
+  SetProcessDPIAware();
+#endif
   State s {};
   // Setup SDL
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
@@ -51,24 +58,14 @@ nude::API::State nude::API::Init() {
   ImGui_ImplSDL3_InitForSDLRenderer(s.m_window, s.m_renderer);
   ImGui_ImplSDLRenderer3_Init(s.m_renderer);
 
-  // Load Fonts
-  // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
-  // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-  // - If the file cannot be loaded, the function will return a nullptr. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-  // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
-  // - Use '#define IMGUI_ENABLE_FREETYPE' in your imconfig file to use Freetype for higher quality font rendering.
-  // - Read 'docs/FONTS.md' for more instructions and details.
-  // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-  // - Our Emscripten build process allows embedding fonts to be accessible at runtime from the "fonts/" folder. See Makefile.emscripten for details.
-  //io.Fonts->AddFontDefault();
-  //io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 18.0f);
-  //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-  //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-  //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-  //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
-  //IM_ASSERT(font != nullptr);
+  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+  s.m_global_dockspace_id = UINT32_MAX - 1;
 
   s.m_zep_state = new ZepContainer("", "");
+
+  font::InitBuiltInFonts(s);
+
   return s;
 }
 void nude::API::PreFrame(nude::API::State &s) {
@@ -91,10 +88,33 @@ void nude::API::PreFrame(nude::API::State &s) {
   ImGui_ImplSDLRenderer3_NewFrame();
   ImGui_ImplSDL3_NewFrame();
   ImGui::NewFrame();
+
+  ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove |
+                  ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoMove;
+  window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBackground;
+
+
+  // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
+
+
+  // Important: note that we proceed even if Begin() returns false (aka window is collapsed).
+  // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
+  // all active windows docked into it will lose their parent and become undocked.
+  // We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
+  // any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
+  ImGuiViewport *viewport = ImGui::GetMainViewport();
+  ImVec2 winSize = viewport->Size;
+  ImGui::SetNextWindowPos({0,0});
+  ImGui::SetNextWindowSize(winSize);
+  ImGui::SetNextWindowViewport(viewport->ID);
+  ImGui::Begin("DockSpace", nullptr, window_flags);
+  ImGui::DockSpace(s.m_global_dockspace_id, winSize, ImGuiDockNodeFlags_PassthruCentralNode);
+  ImGui::End();
+
+
 }
 
 void nude::API::PostFrame(nude::API::State &s) {
-
     // Rendering
     ImGui::Render();
     //SDL_RenderSetScale(renderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
