@@ -1,0 +1,9 @@
+[submodule "submodules/sdl"]
+	path = submodules/sdl
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "submodules/imgui"]
+	path = submodules/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "submodules/zep"]
+	path = submodules/zep
+	url = https://github.com/Rezonality/zep.git

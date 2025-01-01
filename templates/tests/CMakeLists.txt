@@ -1,4 +1,0 @@
-add_executable(library_name_TESTS test_name.cpp)
-
-target_link_libraries(library_name_TESTS STATIC library_name)
-target_include_directories(library_name_TESTS PUBLIC ${library_name_INCLUDES})
