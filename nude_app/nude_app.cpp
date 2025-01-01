@@ -1,11 +1,9 @@
 #include "nude.h"
-#include <stdio.h>
 
 // Main code
 int main(int, char**)
 {
   nude::API::State s = nude::API::Init();
-  // Our state
 
   while (!s.m_quit)
   {
@@ -28,10 +26,7 @@ int main(int, char**)
     nude::API::PostFrame(s);
 
   }
-#ifdef __EMSCRIPTEN__
-  EMSCRIPTEN_MAINLOOP_END;
-#endif
-
+  
   // Cleanup
   nude::API::Quit(s);
 
