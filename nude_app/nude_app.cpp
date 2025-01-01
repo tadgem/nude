@@ -6,8 +6,6 @@ int main(int, char**)
 {
   nude::API::State s = nude::API::Init();
   // Our state
-  bool show_demo_window = true;
-  bool show_another_window = false;
 
   while (!s.m_quit)
   {
